@@ -1,0 +1,67 @@
+module car_key(
+    input wire clk, // saat sinyali
+    input wire reset, // sıfırlama sinyali
+    input wire button, // anahtar butonu sinyali
+    output reg red_led, // kırmızı led
+    output reg green_led, // yeşil led
+    output reg yellow_led // sarı led
+    );
+
+reg [25:0] green_counter; // yeşil ışık sayacı
+reg [6:0] yellow_counter; // sarı ışık sayacı
+reg [1:0] state; // durum makinesi durumları
+parameter RED = 2'b00, GREEN = 2'b01, YELLOW = 2'b10;
+
+always @(posedge clk or posedge reset) begin
+    if (reset) begin // sıfırlama durumunda
+        red_led <= 1;
+        green_led <= 0;
+        yellow_led <= 0;
+        green_counter <= 0;
+        yellow_counter <= 0;
+        state <= RED;
+    end else begin
+        case(state)
+            RED: begin
+                if (button) begin // butona basıldığında
+                    red_led <= 0;
+                    green_led <= 1;
+                    yellow_led <= 0;
+                    state <= GREEN;
+                end
+            end
+            GREEN: begin
+                if (button) begin // butona basıldığında
+                    red_led <= 1;
+                    green_led <= 0;
+                    yellow_led <= 0;
+                    state <= RED;
+                end else if (green_counter >= 90000000) begin // 90 saniye geçtiyse
+                    green_led <= 0;
+                    yellow_led <= 1;
+                    state <= YELLOW;
+                    yellow_counter <= 0;
+                end else begin
+                    green_counter <= green_counter + 1;
+                end
+            end
+            YELLOW: begin
+                if (button) begin // butona basıldığında
+                    red_led <= 1;
+                    green_led <= 0;
+                    yellow_led <= 0;
+                    state <= RED;
+                end else if (yellow_counter >= 15000000) begin // 5 saniye geçtiyse
+                    red_led <= 1;
+                    green_led <= 0;
+                    yellow_led <= 0;
+                    state <= RED;
+                end else begin
+                    yellow_counter <= yellow_counter + 1;
+                end
+            end
+        endcase
+    end
+end
+
+endmodule
